@@ -42,6 +42,7 @@
           :current-tab="currentTab"
           @move-status="moveStatus"
           @add-to-watchlist="addToWatchlist"
+          @update-rating="updateRating"
         />
       </div>
     </div>
@@ -181,6 +182,10 @@ const addToWatchlist = (item) => {
 
 const moveStatus = (item, newStatus) => {
   updateMediaItem({ ...item, status: newStatus });
+};
+
+const updateRating = (item, rating) => {
+  updateMediaItem({ ...item, rating });
 };
 </script>
 

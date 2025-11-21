@@ -41,6 +41,39 @@
       <p v-if="item.streamingService" class="streaming-service">{{ item.streamingService }}</p>
       <p class="synopsis">{{ truncate(item.synopsis, 80) }}</p>
       
+      <div class="rating-row">
+        <button 
+          class="rating-btn love" 
+          :class="{ active: item.rating === 'loved' }"
+          @click.stop="$emit('update-rating', item, item.rating === 'loved' ? null : 'loved')"
+          title="Love"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon">
+            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+          </svg>
+        </button>
+        <button 
+          class="rating-btn like" 
+          :class="{ active: item.rating === 'liked' }"
+          @click.stop="$emit('update-rating', item, item.rating === 'liked' ? null : 'liked')"
+          title="Like"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon">
+            <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/>
+          </svg>
+        </button>
+        <button 
+          class="rating-btn dislike" 
+          :class="{ active: item.rating === 'disliked' }"
+          @click.stop="$emit('update-rating', item, item.rating === 'disliked' ? null : 'disliked')"
+          title="Dislike"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon">
+            <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+          </svg>
+        </button>
+      </div>
+
       <div class="actions">
         <div v-if="showStartWatching">
           <button 
@@ -104,7 +137,7 @@ const props = defineProps({
   }
 });
 
-defineEmits(['move-status', 'add-to-watchlist']);
+defineEmits(['move-status', 'add-to-watchlist', 'update-rating']);
 
 const showStartWatching = computed(() => props.item.status === 'want_to_watch' || props.currentTab === 'want_to_watch');
 const showFinished = computed(() => props.item.status === 'watching' || props.currentTab === 'watching');
@@ -265,6 +298,49 @@ const truncate = (text, length) => {
   color: #888;
   font-style: italic;
   margin: 0 0 8px 0;
+}
+
+.rating-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.rating-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #ccc;
+  transition: color 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-btn:hover {
+  transform: scale(1.1);
+}
+
+.rating-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.rating-btn.dislike:hover,
+.rating-btn.dislike.active {
+  color: #ef4444;
+}
+
+.rating-btn.like:hover,
+.rating-btn.like.active {
+  color: #3b82f6;
+}
+
+.rating-btn.love:hover,
+.rating-btn.love.active {
+  color: #ec4899;
 }
 
 .synopsis {
