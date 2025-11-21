@@ -1,0 +1,10 @@
+--- Test Cases ---
+Query: "beas" | Target: "The Beast in Me" () -> Match: true
+Query: "al" | Target: "All Her Fault" () -> Match: true
+Query: "al" | Target: "Malice" () -> Match: false
+Query: "knives" | Target: "Wake Up Dead Man: A Knives Out Mystery" () -> Match: true
+Query: "the beas" | Target: "The Beast in Me" () -> Match: true
+Query: "dead man" | Target: "Wake Up Dead Man: A Knives Out Mystery" () -> Match: true
+Query: "wake up" | Target: "Wake Up Dead Man" () -> Match: true
+Query: "mystery" | Target: "Wake Up Dead Man: A Knives Out Mystery" () -> Match: true
+Query: "out" | Target: "Knives Out" () -> Match: true
