@@ -50,11 +50,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { mediaItems, updateMediaItem, addMediaItem } from '../services/mediaStore';
 import { getRecommendations, getWatchProviders } from '../services/tmdb';
 import ShowCard from '../components/ShowCard.vue';
 
+const router = useRouter();
+const route = useRoute();
 const currentTab = ref('watching');
 const filterQuery = ref('');
 const recommendations = ref([]);
@@ -93,10 +96,27 @@ const filteredItems = computed(() => {
   return items;
 });
 
+// Sync tab with URL
+onMounted(() => {
+  if (route.query.tab && tabs.some(t => t.id === route.query.tab)) {
+    currentTab.value = route.query.tab;
+  }
+});
+
+// Update URL when tab changes
 watch(currentTab, async (newTab) => {
+  router.replace({ query: { ...route.query, tab: newTab } });
+  
   filterQuery.value = ''; // Clear filter on tab change
   if (newTab === 'recommendations') {
     await fetchRecommendations();
+  }
+});
+
+// Update tab if URL changes (e.g. back button)
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && tabs.some(t => t.id === newTab) && newTab !== currentTab.value) {
+    currentTab.value = newTab;
   }
 });
 
@@ -163,29 +183,41 @@ const fetchRecommendations = async () => {
   loadingRecommendations.value = false;
 };
 
-const addToWatchlist = (item) => {
-    addMediaItem({
-        name: item.name,
-        type: item.type,
-        service: item.streamingService || 'Unknown', // Default to found service or Unknown
-        status: 'want_to_watch',
-        tmdb_id: item.tmdb_id,
-        poster_path: item.poster_path,
-        synopsis: item.synopsis
-    });
-    
-    // Remove from recommendations list
-    recommendations.value = recommendations.value.filter(r => r.id !== item.id);
-    
-    currentTab.value = 'want_to_watch';
+const addToWatchlist = async (item) => {
+    try {
+        await addMediaItem({
+            name: item.name,
+            type: item.type,
+            service: item.streamingService || 'Unknown', // Default to found service or Unknown
+            status: 'want_to_watch',
+            tmdb_id: item.tmdb_id,
+            poster_path: item.poster_path,
+            synopsis: item.synopsis
+        });
+        
+        // Remove from recommendations list
+        recommendations.value = recommendations.value.filter(r => r.id !== item.id);
+        
+        currentTab.value = 'want_to_watch';
+    } catch (e) {
+        console.error("Error adding to watchlist:", e);
+    }
 };
 
-const moveStatus = (item, newStatus) => {
-  updateMediaItem({ ...item, status: newStatus });
+const moveStatus = async (item, newStatus) => {
+  try {
+    await updateMediaItem({ ...item, status: newStatus });
+  } catch (e) {
+    console.error("Error moving status:", e);
+  }
 };
 
-const updateRating = (item, rating) => {
-  updateMediaItem({ ...item, rating });
+const updateRating = async (item, rating) => {
+  try {
+    await updateMediaItem({ ...item, rating });
+  } catch (e) {
+    console.error("Error updating rating:", e);
+  }
 };
 </script>
 

@@ -1,31 +1,59 @@
 import { ref } from 'vue';
+import { db } from '../firebase';
+import {
+    collection,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    onSnapshot,
+    query,
+    orderBy
+} from 'firebase/firestore';
 
-const STORAGE_KEY = 'stream_track_items';
+const COLLECTION_NAME = 'media_items';
+export const mediaItems = ref([]);
 
-export const mediaItems = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+// Subscribe to real-time updates
+const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+onSnapshot(q, (snapshot) => {
+    mediaItems.value = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+}, (error) => {
+    console.error("Error fetching media items:", error);
+});
 
-export const addMediaItem = (item) => {
-    mediaItems.value.push({
-        id: Date.now().toString(),
-        ...item,
-        createdAt: new Date().toISOString()
-    });
-    saveToStorage();
-};
-
-export const updateMediaItem = (updatedItem) => {
-    const index = mediaItems.value.findIndex(item => item.id === updatedItem.id);
-    if (index !== -1) {
-        mediaItems.value[index] = updatedItem;
-        saveToStorage();
+export const addMediaItem = async (item) => {
+    try {
+        await addDoc(collection(db, COLLECTION_NAME), {
+            ...item,
+            createdAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        throw e;
     }
 };
 
-export const deleteMediaItem = (id) => {
-    mediaItems.value = mediaItems.value.filter(item => item.id !== id);
-    saveToStorage();
+export const updateMediaItem = async (updatedItem) => {
+    try {
+        const { id, ...data } = updatedItem;
+        const docRef = doc(db, COLLECTION_NAME, id);
+        await updateDoc(docRef, data);
+    } catch (e) {
+        console.error("Error updating document: ", e);
+        throw e;
+    }
 };
 
-const saveToStorage = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mediaItems.value));
+export const deleteMediaItem = async (id) => {
+    try {
+        await deleteDoc(doc(db, COLLECTION_NAME, id));
+    } catch (e) {
+        console.error("Error deleting document: ", e);
+        throw e;
+    }
 };
+

@@ -75,6 +75,17 @@
       </div>
 
       <div class="actions">
+        <div v-if="currentTab === 'recommendations'" style="margin-bottom: 8px;">
+          <a 
+            v-if="tmdbUrl"
+            :href="tmdbUrl" 
+            target="_blank" 
+            class="action-btn secondary"
+            @click.stop
+          >
+            Learn More
+          </a>
+        </div>
         <div v-if="showStartWatching">
           <button 
             v-if="!isUnreleased"
@@ -151,6 +162,12 @@ const isUnreleased = computed(() => {
 const formattedReleaseDate = computed(() => {
   if (!props.item.release_date) return '';
   return new Date(props.item.release_date).toLocaleDateString();
+});
+
+const tmdbUrl = computed(() => {
+  if (!props.item.tmdb_id) return '';
+  const type = props.item.type === 'movie' ? 'movie' : 'tv';
+  return `https://www.themoviedb.org/${type}/${props.item.tmdb_id}`;
 });
 
 const truncate = (text, length) => {
@@ -376,6 +393,10 @@ const truncate = (text, length) => {
   font-weight: 600;
   font-size: 0.9rem;
   transition: background 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .action-btn:hover {

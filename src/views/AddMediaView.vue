@@ -207,21 +207,31 @@ const selectResult = async (result) => {
   }
 };
 
-const saveItem = () => {
-  if (isEditing.value) {
-    updateMediaItem(form.value);
-  } else {
-    // Remove ID so addMediaItem generates a new one
-    const { id, ...newItem } = form.value;
-    addMediaItem(newItem);
+const saveItem = async () => {
+  try {
+    let status = form.value.status;
+    if (isEditing.value) {
+      await updateMediaItem(form.value);
+    } else {
+      // Remove ID so addMediaItem generates a new one
+      const { id, ...newItem } = form.value;
+      await addMediaItem(newItem);
+      status = newItem.status;
+    }
+    router.push({ path: '/', query: { tab: status } });
+  } catch (e) {
+    alert('Error saving item: ' + e.message);
   }
-  router.push('/');
 };
 
-const deleteItem = () => {
+const deleteItem = async () => {
   if (confirm('Are you sure you want to delete this show?')) {
-    deleteMediaItem(form.value.id);
-    router.push('/');
+    try {
+      await deleteMediaItem(form.value.id);
+      router.push('/');
+    } catch (e) {
+      alert('Error deleting item: ' + e.message);
+    }
   }
 };
 
