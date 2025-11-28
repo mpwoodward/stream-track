@@ -1,25 +1,27 @@
 <template>
   <div class="home">
-    <div class="tabs">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.id"
-        :class="{ active: currentTab === tab.id }"
-        @click="currentTab = tab.id"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
-    <div class="actions-bar">
-      <div v-if="currentTab !== 'recommendations'" class="filter-container">
-        <input 
-          v-model="filterQuery" 
-          placeholder="Filter shows..." 
-          class="filter-input"
+    <div class="sticky-header">
+      <div class="tabs">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id"
+          :class="{ active: currentTab === tab.id }"
+          @click="currentTab = tab.id"
         >
+          {{ tab.label }}
+        </button>
       </div>
-      <button @click="$router.push('/add')" class="add-btn">+ Add New</button>
+
+      <div class="actions-bar">
+        <div v-if="currentTab !== 'recommendations'" class="filter-container">
+          <input 
+            v-model="filterQuery" 
+            placeholder="Filter shows..." 
+            class="filter-input"
+          >
+        </div>
+        <button @click="$router.push('/add')" class="add-btn">+ Add New</button>
+      </div>
     </div>
 
     <div class="content">
@@ -310,5 +312,26 @@ const updateRating = async (item, rating) => {
   padding: 40px;
   color: #666;
   font-style: italic;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 65px; /* Height of the main header */
+  z-index: 90;
+  background-color: #ffffff; /* Match body background */
+  padding-top: 10px;
+  margin-bottom: 20px;
+  /* Add negative margin and padding to cover full width if needed, 
+     but .home has padding. Let's see how it looks. 
+     If .home has padding, the sticky element is inside it. 
+     The background will only cover the content area. 
+     To cover full width, we might need to adjust .home padding or use negative margins.
+  */
+}
+
+@media (prefers-color-scheme: dark) {
+  .sticky-header {
+    background-color: #242424;
+  }
 }
 </style>
