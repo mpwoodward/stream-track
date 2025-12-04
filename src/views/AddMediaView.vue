@@ -282,7 +282,7 @@ const cancelEdit = () => {
 }
 
 .result-item:hover {
-  background: #f9f9f9;
+  background: #333;
 }
 
 .result-item img {
