@@ -35,6 +35,22 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           }
+        ],
+        screenshots: [
+          {
+            src: 'mobile-screenshot.png',
+            sizes: '738x773',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Stream Track Mobile'
+          },
+          {
+            src: 'desktop-screenshot.png',
+            sizes: '997x698',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Stream Track Desktop'
+          }
         ]
       }
     })
