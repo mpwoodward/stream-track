@@ -1,9 +1,27 @@
 <script setup>
+import { useRegisterSW } from 'virtual:pwa-register/vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import { subscribeToMediaItems, unsubscribeFromMediaItems } from './services/mediaStore'
 import { watch } from 'vue'
 import logo from './assets/logo.svg'
+
+// Notify user when update available
+const {
+  needRefresh,
+  updateServiceWorker,
+} = useRegisterSW({
+  onRegistered(r) {
+    console.log('SW Registered', r)
+  },
+  onRegisterError(err) {
+    console.log('SW Register Error', err)
+  },
+})
+
+const close = () => {
+  needRefresh.value = false
+}
 
 const { user, logout, authLoading, isAllowed } = useAuth()
 const router = useRouter()
@@ -55,6 +73,18 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
     </header>
 
     <RouterView />
+
+    <div v-if="needRefresh" class="pwa-toast" role="alert">
+      <div class="message">
+        New content available, click on reload button to update.
+      </div>
+      <button @click="updateServiceWorker()" class="reload-btn">
+        Reload
+      </button>
+      <button @click="close" class="close-btn">
+        Close
+      </button>
+    </div>
   </template>
 </template>
 
@@ -131,6 +161,46 @@ nav {
   align-items: center;
   height: 100vh;
   font-size: 1.2rem;
+  color: #666;
+}
+
+.pwa-toast {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  margin: 16px;
+  padding: 12px;
+  border: 1px solid #8885;
+  border-radius: 4px;
+  z-index: 100;
+  text-align: left;
+  box-shadow: 3px 4px 5px 0 #8885;
+  background-color: white;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pwa-toast .message {
+  margin-bottom: 0;
+  color: #333;
+}
+
+.reload-btn {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-btn {
+  background-color: transparent;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
   color: #666;
 }
 </style>
