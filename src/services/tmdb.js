@@ -4,6 +4,11 @@ import { db } from '../firebase';
 const BASE_URL = 'https://api.themoviedb.org/3';
 let cachedKey = null;
 
+export const checkApiKey = async () => {
+    const key = await getApiKey();
+    return !!key;
+};
+
 const getApiKey = async () => {
     if (cachedKey) return cachedKey;
 

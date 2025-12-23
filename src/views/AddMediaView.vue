@@ -105,7 +105,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { searchMulti, getWatchProviders } from '../services/tmdb';
+import { searchMulti, getWatchProviders, checkApiKey } from '../services/tmdb';
 import { addMediaItem, updateMediaItem, deleteMediaItem, mediaItems } from '../services/mediaStore';
 
 const router = useRouter();
@@ -128,7 +128,7 @@ const form = ref({
 });
 
 const isEditing = computed(() => !!route.params.id);
-const hasApiKey = computed(() => !!localStorage.getItem('tmdb_api_key'));
+const hasApiKey = ref(false);
 
 const isFutureRelease = computed(() => {
   if (!form.value.release_date) return false;
@@ -141,7 +141,9 @@ watch(isFutureRelease, (isFuture) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
+  hasApiKey.value = await checkApiKey();
+
   if (isEditing.value) {
     const item = mediaItems.value.find(i => i.id === route.params.id);
     if (item) {
