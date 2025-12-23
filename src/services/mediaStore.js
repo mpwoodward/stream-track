@@ -14,16 +14,29 @@ import {
 const COLLECTION_NAME = 'media_items';
 export const mediaItems = ref([]);
 
-// Subscribe to real-time updates
-const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-onSnapshot(q, (snapshot) => {
-    mediaItems.value = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    }));
-}, (error) => {
-    console.error("Error fetching media items:", error);
-});
+let unsubscribe = null;
+
+export const subscribeToMediaItems = () => {
+    if (unsubscribe) return;
+
+    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+    unsubscribe = onSnapshot(q, (snapshot) => {
+        mediaItems.value = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    }, (error) => {
+        console.error("Error fetching media items:", error);
+    });
+};
+
+export const unsubscribeFromMediaItems = () => {
+    if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+        mediaItems.value = []; // Clear data on logout
+    }
+};
 
 export const addMediaItem = async (item) => {
     try {
