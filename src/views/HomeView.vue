@@ -1,17 +1,6 @@
 <template>
   <div class="home">
     <div class="sticky-header">
-      <div class="tabs">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id"
-          :class="{ active: currentTab === tab.id }"
-          @click="currentTab = tab.id"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-
       <div class="actions-bar">
         <div v-if="currentTab !== 'recommendations'" class="filter-container">
           <input 
@@ -20,7 +9,7 @@
             class="filter-input"
           >
         </div>
-        <button @click="$router.push('/add')" class="add-btn">+ Add New</button>
+        <button @click="$router.push('/add')" class="add-btn">{{ filterQuery || currentTab === 'recommendations' ? '+ Add' : '+ Add New' }}</button>
       </div>
     </div>
 
@@ -48,6 +37,20 @@
         />
       </div>
     </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.id"
+        class="nav-item"
+        :class="{ active: currentTab === tab.id }"
+        @click="currentTab = tab.id"
+      >
+        <span class="icon">{{ tab.icon }}</span>
+        <span class="label">{{ tab.label }}</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -66,10 +69,10 @@ const recommendations = ref([]);
 const loadingRecommendations = ref(false);
 
 const tabs = [
-  { id: 'watching', label: 'Watching' },
-  { id: 'want_to_watch', label: 'Want to Watch' },
-  { id: 'watched', label: 'Watched' },
-  { id: 'recommendations', label: 'Recommendations' }
+  { id: 'watching', label: 'Watching', icon: '📺' },
+  { id: 'want_to_watch', label: 'To Watch', icon: '🔖' },
+  { id: 'watched', label: 'Watched', icon: '✅' },
+  { id: 'recommendations', label: 'For You', icon: '✨' }
 ];
 
 const currentTabLabel = computed(() => tabs.find(t => t.id === currentTab.value)?.label);
@@ -88,8 +91,6 @@ const filteredItems = computed(() => {
     items = items.filter(item => {
       const nName = normalize(item.name);
       const nNickname = item.nickname ? normalize(item.nickname) : '';
-      // Check if query matches start of any word in name or nickname
-      // Prepending space ensures we match start of words
       return (" " + nName).includes(" " + nQuery) || 
              (" " + nNickname).includes(" " + nQuery);
     });
@@ -126,9 +127,6 @@ const fetchRecommendations = async () => {
   loadingRecommendations.value = true;
   recommendations.value = [];
   
-  // Get items that are "watched" or "watching" to base recommendations on
-  // Ideally we'd use "loved" items, but we haven't implemented rating yet.
-  // Let's use the last 3 items added to the list that have a TMDB ID.
   const sourceItems = mediaItems.value
     .filter(item => item.tmdb_id && (item.status === 'watched' || item.status === 'watching'))
     .slice(-3);
@@ -138,18 +136,16 @@ const fetchRecommendations = async () => {
     return;
   }
 
-  const newRecs = new Map(); // Use Map to avoid duplicates
-
+  const newRecs = new Map();
   const existingTmdbIds = new Set(mediaItems.value.map(item => item.tmdb_id).filter(id => id));
 
   for (const item of sourceItems) {
     try {
       const data = await getRecommendations(item.type, item.tmdb_id);
       
-      // Process recommendations in parallel to get providers
-      const recPromises = data.results.slice(0, 6).map(async (rec) => { // Limit to top 6 per source item
+      const recPromises = data.results.slice(0, 6).map(async (rec) => {
         if (newRecs.has(rec.id)) return;
-        if (existingTmdbIds.has(rec.id)) return; // Skip if already in library
+        if (existingTmdbIds.has(rec.id)) return;
 
         let streamingService = '';
         try {
@@ -166,7 +162,7 @@ const fetchRecommendations = async () => {
           id: `rec-${rec.id}`,
           tmdb_id: rec.id,
           name: rec.title || rec.name,
-          type: rec.media_type || item.type, // Fallback to source type if missing
+          type: rec.media_type || item.type,
           service: 'Recommended',
           streamingService,
           synopsis: rec.overview,
@@ -190,16 +186,14 @@ const addToWatchlist = async (item) => {
         await addMediaItem({
             name: item.name,
             type: item.type,
-            service: item.streamingService || 'Unknown', // Default to found service or Unknown
+            service: item.streamingService || 'Unknown',
             status: 'want_to_watch',
             tmdb_id: item.tmdb_id,
             poster_path: item.poster_path,
             synopsis: item.synopsis
         });
         
-        // Remove from recommendations list
         recommendations.value = recommendations.value.filter(r => r.id !== item.id);
-        
         currentTab.value = 'want_to_watch';
     } catch (e) {
         console.error("Error adding to watchlist:", e);
@@ -225,39 +219,66 @@ const updateRating = async (item, rating) => {
 
 <style scoped>
 .home {
-  padding: 20px;
+  padding: 10px 20px 80px 20px; /* Added bottom padding for nav */
   max-width: 800px;
   margin: 0 auto;
 }
 
-.tabs {
-  display: flex;
-  gap: 10px;
+.sticky-header {
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+  background-color: #ffffff;
+  padding-top: 10px;
   margin-bottom: 20px;
-  overflow-x: auto;
-  padding-bottom: 5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f1f1;
 }
 
-.tabs button {
-  padding: 10px 20px;
-  border: none;
-  background: #e2e8f0;
-  color: #475569;
-  border-radius: 20px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-  font-weight: 600;
+.actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 
-.tabs button:hover {
-  background: #cbd5e1;
+.filter-container {
+  flex: 1;
 }
 
-.tabs button.active {
+.filter-input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 25px; /* Softer pill shape */
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.filter-input:focus {
+  background: white;
+  border-color: #42b983;
+  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
+}
+
+.add-btn {
   background: #42b983;
   color: white;
-  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px; /* Match input */
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(66, 185, 131, 0.3);
+  transition: transform 0.1s;
+}
+
+.add-btn:active {
+  transform: scale(0.95);
 }
 
 .empty-state {
@@ -272,41 +293,6 @@ const updateRating = async (item, rating) => {
   gap: 20px;
 }
 
-.actions-bar {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.filter-container {
-  flex: 1;
-  margin-right: 20px;
-}
-
-.filter-input {
-  width: 100%;
-  max-width: 300px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 0.9rem;
-}
-
-.add-btn {
-  background: #42b983;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.add-btn:hover {
-  background: #3aa876;
-}
-
 .loading {
   text-align: center;
   padding: 40px;
@@ -314,24 +300,81 @@ const updateRating = async (item, rating) => {
   font-style: italic;
 }
 
-.sticky-header {
-  position: sticky;
-  top: 65px; /* Height of the main header */
-  z-index: 90;
-  background-color: #ffffff; /* Match body background */
-  padding-top: 10px;
-  margin-bottom: 20px;
-  /* Add negative margin and padding to cover full width if needed, 
-     but .home has padding. Let's see how it looks. 
-     If .home has padding, the sticky element is inside it. 
-     The background will only cover the content area. 
-     To cover full width, we might need to adjust .home padding or use negative margins.
-  */
+/* Bottom Nav Styles */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 10px 20px 10px; /* Extra padding for safe area on iPhone */
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05); /* Softer shadow */
+  z-index: 1000;
+  border-top: 1px solid #f0f0f0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s;
+  flex: 1; /* Distribute space evenly */
+  max-width: 80px;
+}
+
+.nav-item .icon {
+  font-size: 1.25rem;
+  filter: grayscale(1);
+  transition: filter 0.2s;
+}
+
+.nav-item.active {
+  color: #42b983;
+}
+
+.nav-item.active .icon {
+  filter: none;
+  transform: scale(1.1);
 }
 
 @media (prefers-color-scheme: dark) {
   .sticky-header {
     background-color: #242424;
+    border-bottom-color: #333;
+  }
+  
+  .filter-input {
+    background: #333;
+    border-color: #444;
+    color: white;
+  }
+  
+  .filter-input:focus {
+    background: #2a2a2a;
+  }
+
+  .bottom-nav {
+    background: #1a1a1a;
+    border-top-color: #333;
+  }
+
+  .nav-item {
+    color: #64748b;
+  }
+  
+  .nav-item.active {
+    color: #42b983;
   }
 }
 </style>
