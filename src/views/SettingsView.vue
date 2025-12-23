@@ -11,19 +11,41 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const tmdbKey = ref('');
+const loading = ref(false);
 
-onMounted(() => {
-  const storedKey = localStorage.getItem('tmdb_api_key');
-  if (storedKey) {
-    tmdbKey.value = storedKey;
+onMounted(async () => {
+  try {
+    const docRef = doc(db, 'config', 'tmdb');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      tmdbKey.value = docSnap.data().key || '';
+    } else {
+      // Fallback/Legacy check
+      const storedKey = localStorage.getItem('tmdb_api_key');
+      if (storedKey) tmdbKey.value = storedKey;
+    }
+  } catch (e) {
+    console.error("Error fetching config:", e);
   }
 });
 
-const saveKey = () => {
-  localStorage.setItem('tmdb_api_key', tmdbKey.value);
-  alert('API Key saved!');
+const saveKey = async () => {
+  loading.value = true;
+  try {
+    await setDoc(doc(db, 'config', 'tmdb'), { key: tmdbKey.value });
+    // Also update local storage just in case until full migration
+    localStorage.setItem('tmdb_api_key', tmdbKey.value);
+    alert('API Key saved to database! It will now persist everywhere.');
+  } catch (e) {
+    console.error("Error saving key:", e);
+    alert('Error saving key to database. Check permissions?');
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 
