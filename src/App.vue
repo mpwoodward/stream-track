@@ -3,6 +3,7 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import { subscribeToMediaItems, unsubscribeFromMediaItems } from './services/mediaStore'
 import { watch } from 'vue'
+import logo from './assets/logo.svg'
 
 const { user, logout, authLoading, isAllowed } = useAuth()
 const router = useRouter()
@@ -41,6 +42,7 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
   <template v-else>
     <header v-if="user && isAllowed">
       <nav>
+        <img :src="logo" alt="Stream Track" class="nav-logo" />
         <div class="nav-links">
           <RouterLink to="/">Home</RouterLink>
           <RouterLink to="/settings">Settings</RouterLink>
@@ -71,11 +73,18 @@ header {
 nav {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-logo {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
 }
 
 .user-actions {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 1rem;

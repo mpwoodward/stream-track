@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#42b983" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Rounded Triangle / Play Button shape -->
+  <path d="M25 20 L85 50 L25 80 Z" />
+  
+  <!-- "Eye" Pupil centered in the wider part -->
+  <circle cx="45" cy="50" r="10" fill="#42b983" stroke="none"/>
+</svg>
