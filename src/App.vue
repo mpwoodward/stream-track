@@ -12,7 +12,12 @@ const {
   updateServiceWorker,
 } = useRegisterSW({
   onRegistered(r) {
-    console.log('SW Registered', r)
+    console.log('SW Registered', r);
+    r.update(); // Initial check
+    setInterval(async () => {
+      console.log('Checking for updates...');
+      await r.update();
+    }, 60 * 60 * 1000); // Check every hour
   },
   onRegisterError(err) {
     console.log('SW Register Error', err)
