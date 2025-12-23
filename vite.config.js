@@ -14,6 +14,8 @@ export default defineConfig({
         description: 'Track your streaming shows and movies',
         theme_color: '#242424',
         background_color: '#242424',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
