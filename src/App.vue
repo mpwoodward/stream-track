@@ -61,14 +61,7 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
     <header v-if="user && isAllowed">
       <nav>
         <img :src="logo" alt="Stream Track" class="nav-logo" />
-        <div class="nav-links">
-          <RouterLink to="/">Home</RouterLink>
-          <RouterLink to="/settings">Settings</RouterLink>
-        </div>
-        <div class="user-actions">
-          <span class="user-email" v-if="user">{{ user.email }}</span>
-          <button @click="handleLogout" class="logout-btn">LOGOUT</button>
-        </div>
+        <button @click="handleLogout" class="logout-btn">LOGOUT</button>
       </nav>
     </header>
 
@@ -103,40 +96,14 @@ header {
 nav {
   width: 100%;
   display: flex;
+  justify-content: space-between; /* Push items to edges */
   align-items: center;
-  gap: 1.5rem;
 }
 
 .nav-logo {
   height: 32px;
   width: 32px;
   object-fit: contain;
-}
-
-.user-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-email {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.nav-links a {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  color: #4b5563;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-links a.router-link-exact-active {
-  color: #42b983;
-  font-weight: bold;
 }
 
 .logout-btn {
