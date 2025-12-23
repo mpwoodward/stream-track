@@ -65,7 +65,10 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
   <template v-else>
     <header v-if="user && isAllowed">
       <nav>
-        <img :src="logo" alt="Stream Track" class="nav-logo" />
+        <div class="brand">
+          <img :src="logo" alt="Stream Track" class="nav-logo" />
+          <span class="app-title">StreamTrack</span>
+        </div>
         <button @click="handleLogout" class="logout-btn">LOGOUT</button>
       </nav>
     </header>
@@ -102,7 +105,22 @@ nav {
   width: 100%;
   display: flex;
   justify-content: space-between; /* Push items to edges */
+  gap: 1.5rem; /* Fallback */
+  justify-content: space-between;
   align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-title {
+  color: #42b983;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
 }
 
 .nav-logo {
