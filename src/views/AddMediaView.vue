@@ -17,7 +17,7 @@
     </div>
 
     <div v-if="hasSearched && searchResults.length === 0" class="no-results">
-        No results found for "{{ searchQuery }}".
+        No results found for "{{ lastSearchQuery }}".
     </div>
     
     <div v-if="searchResults.length > 0" class="results-list">
@@ -115,6 +115,7 @@ import { addMediaItem, updateMediaItem, deleteMediaItem, mediaItems } from '../s
 const router = useRouter();
 const route = useRoute();
 const searchQuery = ref('');
+const lastSearchQuery = ref('');
 const searchResults = ref([]);
 const hasSearched = ref(false);
 const selectedItem = ref(null);
@@ -165,6 +166,11 @@ const performSearch = async () => {
     const data = await searchMulti(searchQuery.value);
     searchResults.value = data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv');
     hasSearched.value = true;
+    lastSearchQuery.value = searchQuery.value;
+    
+    if (searchResults.value.length === 0) {
+        searchQuery.value = '';
+    }
   } catch (e) {
     alert(e.message);
   }
