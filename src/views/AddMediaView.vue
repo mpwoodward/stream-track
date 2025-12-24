@@ -16,6 +16,10 @@
       <button @click="performSearch" :disabled="!hasApiKey || !searchQuery">Search</button>
     </div>
 
+    <div v-if="hasSearched && searchResults.length === 0" class="no-results">
+        No results found for "{{ searchQuery }}".
+    </div>
+    
     <div v-if="searchResults.length > 0" class="results-list">
       <h3>Results</h3>
       <div 
@@ -112,6 +116,7 @@ const router = useRouter();
 const route = useRoute();
 const searchQuery = ref('');
 const searchResults = ref([]);
+const hasSearched = ref(false);
 const selectedItem = ref(null);
 
 const form = ref({
@@ -159,6 +164,7 @@ const performSearch = async () => {
   try {
     const data = await searchMulti(searchQuery.value);
     searchResults.value = data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv');
+    hasSearched.value = true;
   } catch (e) {
     alert(e.message);
   }
@@ -244,7 +250,7 @@ const cancelEdit = () => {
 
 <style scoped>
 .add-media {
-  padding: 20px;
+  padding: 20px 20px 100px 20px; /* Added bottom padding to clear nav */
   max-width: 600px;
   margin: 0 auto;
 }
@@ -259,6 +265,16 @@ const cancelEdit = () => {
 .search-section {
   display: flex;
   gap: 10px;
+  margin-bottom: 20px;
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 4px;
   margin-bottom: 20px;
 }
 
