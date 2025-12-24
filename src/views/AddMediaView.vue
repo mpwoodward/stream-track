@@ -178,6 +178,7 @@ const performSearch = async () => {
 
 const selectResult = async (result) => {
   selectedItem.value = result;
+  hasSearched.value = false;
   const type = result.media_type === 'movie' ? 'movie' : 'tv';
   
   form.value = {
