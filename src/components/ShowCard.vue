@@ -41,8 +41,7 @@
       <p v-if="item.streamingService" class="streaming-service">{{ item.streamingService }}</p>
       <p class="synopsis">{{ truncate(item.synopsis, 80) }}</p>
       
-      <p class="synopsis">{{ truncate(item.synopsis, 80) }}</p>
-      
+
       <!-- Ratings Row (Hide on Recommendations) -->
       <div v-if="currentTab !== 'recommendations'" class="rating-row">
         <button 
