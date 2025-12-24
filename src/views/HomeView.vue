@@ -14,7 +14,7 @@
     </div>
 
     <div class="content">
-      <div v-if="loadingRecommendations" class="loading">
+      <div v-if="loadingRecommendations && recommendations.length === 0" class="loading">
         Loading recommendations...
       </div>
       <div v-else-if="filteredItems.length === 0" class="empty-state">
@@ -38,9 +38,9 @@
         />
       </div>
 
-      <div v-if="currentTab === 'recommendations' && recommendations.length > 0 && !loadingRecommendations" class="load-more-container">
-        <button @click="fetchRecommendations(true)" class="load-more-btn">
-          Show more recommendations ...
+      <div v-if="currentTab === 'recommendations' && recommendations.length > 0" class="load-more-container">
+        <button @click="fetchRecommendations(true)" class="load-more-btn" :disabled="loadingRecommendations">
+          {{ loadingRecommendations ? 'Loading...' : 'Show more recommendations ...' }}
         </button>
       </div>
     </div>
@@ -417,7 +417,12 @@ const updateRating = async (item, rating) => {
   transition: background 0.2s;
 }
 
-.load-more-btn:hover {
+.load-more-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.load-more-btn:hover:not(:disabled) {
   background: #f0fdf4;
   text-decoration: underline;
 }
