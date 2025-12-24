@@ -46,11 +46,11 @@ export const getDetails = async (type, id) => {
     return response.json();
 };
 
-export const getRecommendations = async (type, id) => {
+export const getRecommendations = async (type, id, page = 1) => {
     const apiKey = await getApiKey();
     if (!apiKey) throw new Error('Missing API Key');
 
-    const response = await fetch(`${BASE_URL}/${type}/${id}/recommendations?api_key=${apiKey}`);
+    const response = await fetch(`${BASE_URL}/${type}/${id}/recommendations?api_key=${apiKey}&page=${page}`);
     if (!response.ok) throw new Error('Fetch recommendations failed');
     return response.json();
 };

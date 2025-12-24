@@ -37,6 +37,12 @@
           @not-interested="markNotInterested"
         />
       </div>
+
+      <div v-if="currentTab === 'recommendations' && recommendations.length > 0 && !loadingRecommendations" class="load-more-container">
+        <button @click="fetchRecommendations(true)" class="load-more-btn">
+          Show more recommendations ...
+        </button>
+      </div>
     </div>
 
     <!-- Bottom Navigation -->
@@ -66,8 +72,10 @@ const router = useRouter();
 const route = useRoute();
 const currentTab = ref('watching');
 const filterQuery = ref('');
+
 const recommendations = ref([]);
 const loadingRecommendations = ref(false);
+const recPage = ref(1);
 
 const tabs = [
   { id: 'watching', label: 'Watching', icon: '📺' },
@@ -124,9 +132,15 @@ watch(() => route.query.tab, (newTab) => {
   }
 });
 
-const fetchRecommendations = async () => {
+const fetchRecommendations = async (isLoadMore = false) => {
   loadingRecommendations.value = true;
-  recommendations.value = [];
+  
+  if (!isLoadMore) {
+    recommendations.value = [];
+    recPage.value = 1;
+  } else {
+    recPage.value++;
+  }
   
   const sourceItems = mediaItems.value
     .filter(item => item.tmdb_id && (item.status === 'watched' || item.status === 'watching'))
@@ -137,15 +151,21 @@ const fetchRecommendations = async () => {
     return;
   }
 
+  // Pre-seed with current recommendation IDs so we don't accidentally duplicate
   const newRecs = new Map();
+  if (isLoadMore) {
+    recommendations.value.forEach(r => newRecs.set(r.tmdb_id, r));
+  }
+  
   const existingTmdbIds = new Set([
+
       ...mediaItems.value.map(item => item.tmdb_id),
       ...ignoredItems.value.map(item => item.tmdb_id)
   ].filter(id => id));
 
   for (const item of sourceItems) {
     try {
-      const data = await getRecommendations(item.type, item.tmdb_id);
+      const data = await getRecommendations(item.type, item.tmdb_id, recPage.value);
       
       const recPromises = data.results.slice(0, 6).map(async (rec) => {
         if (newRecs.has(rec.id)) return;
@@ -378,6 +398,28 @@ const updateRating = async (item, rating) => {
 .nav-item.active .icon {
   filter: none;
   transform: scale(1.1);
+}
+
+.load-more-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.load-more-btn {
+  background: none;
+  border: none;
+  color: #42b983;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+
+.load-more-btn:hover {
+  background: #f0fdf4;
+  text-decoration: underline;
 }
 
 @media (prefers-color-scheme: dark) {
