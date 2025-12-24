@@ -9,7 +9,7 @@
             class="filter-input"
           >
         </div>
-        <button @click="$router.push('/add')" class="add-btn">{{ filterQuery || currentTab === 'recommendations' ? '+ Add' : '+ Add New' }}</button>
+        <button v-if="currentTab !== 'recommendations'" @click="$router.push('/add')" class="add-btn">{{ filterQuery ? '+ Add' : '+ Add New' }}</button>
       </div>
     </div>
 
