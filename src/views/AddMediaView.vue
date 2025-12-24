@@ -13,7 +13,10 @@
         placeholder="Search for a movie or TV show..."
         :disabled="!hasApiKey"
       >
-      <button @click="performSearch" :disabled="!hasApiKey || !searchQuery">Search</button>
+      <button @click="performSearch" :disabled="!hasApiKey || !searchQuery || isSearching">
+        {{ isSearching ? 'Searching...' : 'Search' }}
+      </button>
+      <div v-if="isSearching" class="spinner"></div>
     </div>
 
     <div v-if="hasSearched && searchResults.length === 0" class="no-results">
@@ -118,6 +121,7 @@ const searchQuery = ref('');
 const lastSearchQuery = ref('');
 const searchResults = ref([]);
 const hasSearched = ref(false);
+const isSearching = ref(false);
 const selectedItem = ref(null);
 
 const form = ref({
@@ -162,6 +166,7 @@ onMounted(async () => {
 
 const performSearch = async () => {
   if (!searchQuery.value) return;
+  isSearching.value = true;
   try {
     const data = await searchMulti(searchQuery.value);
     searchResults.value = data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv');
@@ -173,6 +178,8 @@ const performSearch = async () => {
     }
   } catch (e) {
     alert(e.message);
+  } finally {
+    isSearching.value = false;
   }
 };
 
@@ -273,6 +280,21 @@ const cancelEdit = () => {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  align-items: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #42b983;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .no-results {
