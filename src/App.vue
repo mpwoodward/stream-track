@@ -1,9 +1,9 @@
 <script setup>
 import { useRegisterSW } from 'virtual:pwa-register/vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import { subscribeToMediaItems, unsubscribeFromMediaItems, subscribeToIgnoredItems } from './services/mediaStore'
-import { watch } from 'vue'
+import { watch, computed } from 'vue'
 import logo from './assets/logo.svg'
 
 // Notify user when update available
@@ -29,7 +29,25 @@ const close = () => {
 }
 
 const { user, logout, authLoading, isAllowed } = useAuth()
+
 const router = useRouter()
+const route = useRoute()
+
+const tabs = [
+  { id: 'watching', label: 'Watching', icon: '📺' },
+  { id: 'want_to_watch', label: 'To Watch', icon: '🔖' },
+  { id: 'watched', label: 'Watched', icon: '✅' },
+  { id: 'recommendations', label: 'For You', icon: '✨' }
+]
+
+const currentTab = computed(() => {
+  if (route.path !== '/') return null
+  return route.query.tab || 'watching'
+})
+
+const navigateToTab = (tabId) => {
+  router.push({ path: '/', query: { tab: tabId } })
+}
 
 const handleLogout = async () => {
   await logout()
@@ -87,6 +105,20 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
         Close
       </button>
     </div>
+
+    <!-- Bottom Navigation -->
+    <nav v-if="user && isAllowed" class="bottom-nav">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.id"
+        class="nav-item"
+        :class="{ active: currentTab === tab.id }"
+        @click="navigateToTab(tab.id)"
+      >
+        <span class="icon">{{ tab.icon }}</span>
+        <span class="label">{{ tab.label }}</span>
+      </button>
+    </nav>
   </template>
 </template>
 
@@ -193,5 +225,68 @@ nav {
   border-radius: 4px;
   cursor: pointer;
   color: #666;
+}
+
+/* Bottom Nav Styles */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 10px 20px 10px; /* Extra padding for safe area on iPhone */
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05); /* Softer shadow */
+  z-index: 1000;
+  border-top: 1px solid #f0f0f0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s;
+  flex: 1; /* Distribute space evenly */
+  max-width: 80px;
+}
+
+.nav-item .icon {
+  font-size: 1.25rem;
+  filter: grayscale(1);
+  transition: filter 0.2s;
+}
+
+.nav-item.active {
+  color: #42b983;
+}
+
+.nav-item.active .icon {
+  filter: none;
+  transform: scale(1.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bottom-nav {
+    background: #1a1a1a;
+    border-top-color: #333;
+  }
+
+  .nav-item {
+    color: #64748b;
+  }
+  
+  .nav-item.active {
+    color: #42b983;
+  }
 }
 </style>
