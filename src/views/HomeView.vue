@@ -39,7 +39,10 @@
       </div>
 
       <div v-if="currentTab === 'recommendations' && recommendations.length > 0" class="load-more-container">
-        <button @click="fetchRecommendations(true)" class="load-more-btn" :disabled="loadingRecommendations">
+        <div v-if="noMoreRecommendations" class="no-more-msg">
+            No more recommendations available.
+        </div>
+        <button v-else @click="fetchRecommendations(true)" class="load-more-btn" :disabled="loadingRecommendations">
           {{ loadingRecommendations ? 'Loading...' : 'Show more recommendations ...' }}
         </button>
       </div>
@@ -75,6 +78,7 @@ const filterQuery = ref('');
 
 const recommendations = ref([]);
 const loadingRecommendations = ref(false);
+const noMoreRecommendations = ref(false);
 const recPage = ref(1);
 
 const tabs = [
@@ -138,13 +142,14 @@ const fetchRecommendations = async (isLoadMore = false) => {
   if (!isLoadMore) {
     recommendations.value = [];
     recPage.value = 1;
+    noMoreRecommendations.value = false;
   } else {
     recPage.value++;
   }
   
-  const sourceItems = mediaItems.value
-    .filter(item => item.tmdb_id && (item.status === 'watched' || item.status === 'watching'))
-    .slice(-3);
+  // Randomly select 6 distinct items from history to keep recommendations fresh & avoid running dry
+  const history = mediaItems.value.filter(item => item.tmdb_id && (item.status === 'watched' || item.status === 'watching'));
+  const sourceItems = history.sort(() => 0.5 - Math.random()).slice(0, 6);
 
   if (sourceItems.length === 0) {
     loadingRecommendations.value = false;
@@ -163,42 +168,64 @@ const fetchRecommendations = async (isLoadMore = false) => {
       ...ignoredItems.value.map(item => item.tmdb_id)
   ].filter(id => id));
 
-  for (const item of sourceItems) {
-    try {
-      const data = await getRecommendations(item.type, item.tmdb_id, recPage.value);
-      
-      const recPromises = data.results.slice(0, 6).map(async (rec) => {
-        if (newRecs.has(rec.id)) return;
-        if (existingTmdbIds.has(rec.id)) return;
+  let newItemsFound = 0;
+  let retries = 0;
+  const maxRetries = 5;
 
-        let streamingService = '';
-        try {
-            const providers = await getWatchProviders(rec.media_type || item.type, rec.id);
-            const usProviders = providers.results?.US?.flatrate;
-            if (usProviders && usProviders.length > 0) {
-                streamingService = usProviders[0].provider_name;
+  while (newItemsFound === 0 && retries < maxRetries) {
+    if (retries > 0) recPage.value++;
+    
+    for (const item of sourceItems) {
+      try {
+        const data = await getRecommendations(item.type, item.tmdb_id, recPage.value);
+        
+        let addedForThisItem = 0;
+        // Scan all results from the page until we find 6 new ones
+        if (data.results) {
+            for (const rec of data.results) {
+                if (addedForThisItem >= 6) break;
+                
+                if (newRecs.has(rec.id)) continue;
+                if (existingTmdbIds.has(rec.id)) continue;
+
+                let streamingService = '';
+                try {
+                    const providers = await getWatchProviders(rec.media_type || item.type, rec.id);
+                    const usProviders = providers.results?.US?.flatrate;
+                    if (usProviders && usProviders.length > 0) {
+                        streamingService = usProviders[0].provider_name;
+                    }
+                } catch (e) {
+                    // Ignore provider fetch errors
+                }
+
+                newRecs.set(rec.id, {
+                id: `rec-${rec.id}`,
+                tmdb_id: rec.id,
+                name: rec.title || rec.name,
+                type: rec.media_type || item.type,
+                service: 'Recommended',
+                streamingService,
+                synopsis: rec.overview,
+                status: 'recommendation',
+                poster_path: rec.poster_path
+                });
+                
+                addedForThisItem++;
+                newItemsFound++;
             }
-        } catch (e) {
-            // Ignore provider fetch errors
         }
-
-        newRecs.set(rec.id, {
-          id: `rec-${rec.id}`,
-          tmdb_id: rec.id,
-          name: rec.title || rec.name,
-          type: rec.media_type || item.type,
-          service: 'Recommended',
-          streamingService,
-          synopsis: rec.overview,
-          status: 'recommendation',
-          poster_path: rec.poster_path
-        });
-      });
-
-      await Promise.all(recPromises);
-    } catch (e) {
-      console.error(`Failed to get recs for ${item.name}`, e);
+      } catch (e) {
+        console.error(`Failed to get recs for ${item.name}`, e);
+      }
     }
+    
+    retries++;
+  }
+  
+  if (newItemsFound === 0 && retries >= maxRetries) {
+      console.log("No new recommendations found after retries.");
+      noMoreRecommendations.value = true;
   }
   
   recommendations.value = Array.from(newRecs.values());
@@ -403,6 +430,13 @@ const updateRating = async (item, rating) => {
 .load-more-container {
   text-align: center;
   padding: 20px 0;
+}
+
+.no-more-msg {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-style: italic;
+    padding: 10px;
 }
 
 .load-more-btn {
