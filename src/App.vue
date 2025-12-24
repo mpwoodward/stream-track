@@ -2,7 +2,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
-import { subscribeToMediaItems, unsubscribeFromMediaItems } from './services/mediaStore'
+import { subscribeToMediaItems, unsubscribeFromMediaItems, subscribeToIgnoredItems } from './services/mediaStore'
 import { watch } from 'vue'
 import logo from './assets/logo.svg'
 
@@ -40,6 +40,7 @@ const handleLogout = async () => {
 watch([user, isAllowed], ([newUser, newAllowed]) => {
   if (newUser && newAllowed) {
     subscribeToMediaItems()
+    subscribeToIgnoredItems()
   } else {
     unsubscribeFromMediaItems()
   }

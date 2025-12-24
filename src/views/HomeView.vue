@@ -34,6 +34,7 @@
           @move-status="moveStatus"
           @add-to-watchlist="addToWatchlist"
           @update-rating="updateRating"
+          @not-interested="markNotInterested"
         />
       </div>
     </div>
@@ -57,7 +58,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { mediaItems, updateMediaItem, addMediaItem } from '../services/mediaStore';
+import { mediaItems, ignoredItems, updateMediaItem, addMediaItem, addIgnoredItem, subscribeToMediaItems, unsubscribeFromMediaItems, subscribeToIgnoredItems } from '../services/mediaStore';
 import { getRecommendations, getWatchProviders } from '../services/tmdb';
 import ShowCard from '../components/ShowCard.vue';
 
@@ -137,7 +138,10 @@ const fetchRecommendations = async () => {
   }
 
   const newRecs = new Map();
-  const existingTmdbIds = new Set(mediaItems.value.map(item => item.tmdb_id).filter(id => id));
+  const existingTmdbIds = new Set([
+      ...mediaItems.value.map(item => item.tmdb_id),
+      ...ignoredItems.value.map(item => item.tmdb_id)
+  ].filter(id => id));
 
   for (const item of sourceItems) {
     try {
@@ -187,10 +191,8 @@ const addToWatchlist = async (item) => {
             name: item.name,
             type: item.type,
             service: item.streamingService || 'Unknown',
-            status: 'want_to_watch',
-            tmdb_id: item.tmdb_id,
-            poster_path: item.poster_path,
-            synopsis: item.synopsis
+            synopsis: item.synopsis,
+            status: 'want_to_watch' // Force status validation
         });
         
         recommendations.value = recommendations.value.filter(r => r.id !== item.id);
@@ -200,7 +202,37 @@ const addToWatchlist = async (item) => {
     }
 };
 
+const markNotInterested = async (item) => {
+    // Optimistic remove
+    recommendations.value = recommendations.value.filter(r => r.id !== item.id);
+    try {
+        await addIgnoredItem(item);
+    } catch (e) {
+        console.error("Error marking not interested:", e);
+    }
+};
+
 const moveStatus = async (item, newStatus) => {
+  if (item.status === 'recommendation') {
+      // Handle "Already Watched" from Recs tab
+      try {
+        await addMediaItem({
+            name: item.name,
+            type: item.type,
+            service: item.streamingService || 'Unknown',
+            status: 'watched', // Directly to watched
+            tmdb_id: item.tmdb_id,
+            poster_path: item.poster_path,
+            synopsis: item.synopsis
+        });
+        recommendations.value = recommendations.value.filter(r => r.id !== item.id);
+        currentTab.value = 'watched';
+      } catch (e) {
+        console.error("Error adding watched recommendation:", e);
+      }
+      return;
+  }
+  
   try {
     await updateMediaItem({ ...item, status: newStatus });
   } catch (e) {

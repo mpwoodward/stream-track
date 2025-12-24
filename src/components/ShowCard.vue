@@ -41,7 +41,10 @@
       <p v-if="item.streamingService" class="streaming-service">{{ item.streamingService }}</p>
       <p class="synopsis">{{ truncate(item.synopsis, 80) }}</p>
       
-      <div class="rating-row">
+      <p class="synopsis">{{ truncate(item.synopsis, 80) }}</p>
+      
+      <!-- Ratings Row (Hide on Recommendations) -->
+      <div v-if="currentTab !== 'recommendations'" class="rating-row">
         <button 
           class="rating-btn love" 
           :class="{ active: item.rating === 'loved' }"
@@ -75,7 +78,39 @@
       </div>
 
       <div class="actions">
-        <div v-if="currentTab === 'recommendations'" style="margin-bottom: 8px;">
+        <!-- Recommendations Layout -->
+        <template v-if="currentTab === 'recommendations'">
+           <div style="margin-bottom: 12px; text-align: center;">
+            <a 
+                v-if="tmdbUrl"
+                :href="tmdbUrl" 
+                target="_blank" 
+                class="action-btn secondary"
+                @click.stop
+            >
+                Learn More
+            </a>
+           </div>
+           
+           <div class="button-group">
+               <button 
+                class="action-btn"
+                @click.stop="$emit('move-status', item, 'watched')"
+               >
+                Already Watched
+               </button>
+               <button 
+                class="action-btn danger secondary"
+                @click.stop="$emit('not-interested', item)"
+               >
+                Not Interested
+               </button>
+           </div>
+        </template>
+
+        <!-- Standard Layout -->
+        <template v-else>
+            <div v-if="false" style="margin-bottom: 8px;">
           <a 
             v-if="tmdbUrl"
             :href="tmdbUrl" 
@@ -128,7 +163,8 @@
           >
             Wait
           </button>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -148,7 +184,7 @@ const props = defineProps({
   }
 });
 
-defineEmits(['move-status', 'add-to-watchlist', 'update-rating']);
+defineEmits(['move-status', 'add-to-watchlist', 'update-rating', 'not-interested']);
 
 const showStartWatching = computed(() => props.item.status === 'want_to_watch' || props.currentTab === 'want_to_watch');
 const showFinished = computed(() => props.item.status === 'watching' || props.currentTab === 'watching');
@@ -410,6 +446,15 @@ const truncate = (text, length) => {
 
 .action-btn.secondary:hover {
   background: #cbd5e1;
+}
+
+.action-btn.danger {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.action-btn.danger:hover {
+    background: #fee2e2;
 }
 
 .unreleased-msg {
