@@ -73,6 +73,7 @@
           <label>Streaming Service</label>
           <select v-model="form.service" required>
             <option disabled value="">Select a service</option>
+            <option value="AMC+">AMC+</option>
             <option value="Apple TV">Apple TV</option>
             <option value="Disney+">Disney+</option>
             <option value="HBO Max">HBO Max</option>
