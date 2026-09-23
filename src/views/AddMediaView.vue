@@ -78,6 +78,7 @@
             <option value="Disney+">Disney+</option>
             <option value="HBO Max">HBO Max</option>
             <option value="Hulu">Hulu</option>
+            <option value="MGM+">MGM+</option>
             <option value="Netflix">Netflix</option>
             <option value="Paramount+">Paramount+</option>
             <option value="Peacock">Peacock</option>
@@ -210,16 +211,24 @@ const selectResult = async (result) => {
     
     if (usProviders && usProviders.flatrate) {
       const supportedServices = [
-        'Apple TV', 'Disney+', 'HBO Max', 'Hulu', 'Netflix', 
+        'AMC+', 'Apple TV', 'Disney+', 'HBO Max', 'Hulu', 'MGM+', 'Netflix', 
         'Paramount+', 'Peacock', 'Prime Video'
       ];
       
       const match = usProviders.flatrate.find(p => {
-        return supportedServices.some(s => p.provider_name.includes(s) || s.includes(p.provider_name));
+        return supportedServices.some(s => 
+          p.provider_name.includes(s) || 
+          s.includes(p.provider_name) ||
+          p.provider_name.includes(s.replace('+', ' Plus'))
+        );
       });
 
       if (match) {
-        const exactMatch = supportedServices.find(s => match.provider_name.includes(s) || s.includes(match.provider_name));
+        const exactMatch = supportedServices.find(s => 
+          match.provider_name.includes(s) || 
+          s.includes(match.provider_name) ||
+          match.provider_name.includes(s.replace('+', ' Plus'))
+        );
         if (exactMatch) {
           form.value.service = exactMatch;
         }
