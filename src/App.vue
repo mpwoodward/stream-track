@@ -12,8 +12,15 @@ const {
   updateServiceWorker,
 } = useRegisterSW({
   onRegistered(r) {
+    if (!r) return;
     console.log('SW Registered', r);
     r.update(); // Initial check
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Checking for updates on foreground...');
+        r.update();
+      }
+    });
     setInterval(async () => {
       console.log('Checking for updates...');
       await r.update();
@@ -234,15 +241,17 @@ nav {
 
 .pwa-toast {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  margin: 16px;
-  padding: 12px;
-  border: 1px solid #8885;
-  border-radius: 4px;
-  z-index: 100;
+  left: 16px;
+  right: 16px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  max-width: 420px;
+  margin-left: auto;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  z-index: 1100;
   text-align: left;
-  box-shadow: 3px 4px 5px 0 #8885;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   background-color: white;
   display: flex;
   gap: 10px;
@@ -250,8 +259,10 @@ nav {
 }
 
 .pwa-toast .message {
+  flex: 1;
   margin-bottom: 0;
   color: #333;
+  font-size: 0.9rem;
 }
 
 .reload-btn {
@@ -321,6 +332,21 @@ nav {
 }
 
 @media (prefers-color-scheme: dark) {
+  .pwa-toast {
+    background-color: #1a1a1a;
+    border-color: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .pwa-toast .message {
+    color: #f1f5f9;
+  }
+
+  .close-btn {
+    border-color: #475569;
+    color: #cbd5e1;
+  }
+
   .bottom-nav {
     background: #1a1a1a;
     border-top-color: #333;
