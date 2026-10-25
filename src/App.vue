@@ -84,11 +84,14 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
   <template v-else>
     <header v-if="user && isAllowed">
       <nav>
-        <div class="brand">
+        <RouterLink to="/" class="brand">
           <img :src="logo" alt="Stream Track" class="nav-logo" />
           <span class="app-title">StreamTrack</span>
+        </RouterLink>
+        <div class="header-actions">
+          <RouterLink to="/settings" class="settings-link">Settings</RouterLink>
+          <button @click="handleLogout" class="logout-btn">LOGOUT</button>
         </div>
-        <button @click="handleLogout" class="logout-btn">LOGOUT</button>
       </nav>
     </header>
 
@@ -147,6 +150,31 @@ nav {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.settings-link {
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.settings-link:hover,
+.settings-link.router-link-active {
+  background-color: #f1f5f9;
+  color: #42b983;
+  border-color: #42b983;
 }
 
 .app-title {

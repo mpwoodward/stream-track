@@ -7,6 +7,7 @@ const user = ref(null);
 const isAllowed = ref(false);
 const authLoading = ref(true); // Global loading state for auth check
 const authError = ref(null);
+const authReadyWaiters = [];
 
 // Initialize helper to keep state in sync
 onAuthStateChanged(auth, async (currentUser) => {
@@ -36,9 +37,21 @@ onAuthStateChanged(auth, async (currentUser) => {
         isAllowed.value = false;
     }
     authLoading.value = false;
+    while (authReadyWaiters.length > 0) {
+        const resolve = authReadyWaiters.shift();
+        resolve();
+    }
 });
 
 export function useAuth() {
+    const awaitAuthReady = () => {
+        if (!authLoading.value) {
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+            authReadyWaiters.push(resolve);
+        });
+    };
 
     const login = async () => {
         const provider = new GoogleAuthProvider();
@@ -69,6 +82,7 @@ export function useAuth() {
         authLoading,
         authError,
         login,
-        logout
+        logout,
+        awaitAuthReady
     };
 }

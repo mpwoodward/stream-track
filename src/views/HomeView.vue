@@ -57,7 +57,8 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { mediaItems, ignoredItems, updateMediaItem, addMediaItem, addIgnoredItem, subscribeToMediaItems, unsubscribeFromMediaItems, subscribeToIgnoredItems } from '../services/mediaStore';
-import { getRecommendations, getWatchProviders } from '../services/tmdb';
+import { getRecommendations, getWatchProviders, matchUsFlatrateProvider } from '../services/tmdb';
+import { matchesFilterQuery } from '../utils/filterMedia';
 import ShowCard from '../components/ShowCard.vue';
 
 const router = useRouter();
@@ -87,15 +88,9 @@ const filteredItems = computed(() => {
   let items = mediaItems.value.filter(item => item.status === currentTab.value);
   
   if (filterQuery.value) {
-    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-    const nQuery = normalize(filterQuery.value);
-    
-    items = items.filter(item => {
-      const nName = normalize(item.name);
-      const nNickname = item.nickname ? normalize(item.nickname) : '';
-      return (" " + nName).includes(" " + nQuery) || 
-             (" " + nNickname).includes(" " + nQuery);
-    });
+    items = items.filter(item =>
+      matchesFilterQuery(filterQuery.value, item.name, item.nickname)
+    );
   }
   
   return items;
@@ -180,10 +175,7 @@ const fetchRecommendations = async (isLoadMore = false) => {
                 let streamingService = '';
                 try {
                     const providers = await getWatchProviders(rec.media_type || item.type, rec.id);
-                    const usProviders = providers.results?.US?.flatrate;
-                    if (usProviders && usProviders.length > 0) {
-                        streamingService = usProviders[0].provider_name;
-                    }
+                    streamingService = matchUsFlatrateProvider(providers, { fallbackWhenEmpty: '' });
                 } catch (e) {
                     // Ignore provider fetch errors
                 }
@@ -196,6 +188,7 @@ const fetchRecommendations = async (isLoadMore = false) => {
                 service: 'Recommended',
                 streamingService,
                 synopsis: rec.overview,
+                release_date: rec.release_date || rec.first_air_date || '',
                 status: 'recommendation',
                 poster_path: rec.poster_path
                 });
@@ -228,6 +221,9 @@ const addToWatchlist = async (item) => {
             type: item.type,
             service: item.streamingService || 'Unknown',
             synopsis: item.synopsis,
+            release_date: item.release_date || '',
+            tmdb_id: item.tmdb_id,
+            poster_path: item.poster_path,
             status: 'want_to_watch' // Force status validation
         });
         
@@ -257,6 +253,7 @@ const moveStatus = async (item, newStatus) => {
             type: item.type,
             service: item.streamingService || 'Unknown',
             status: 'watched', // Directly to watched
+            release_date: item.release_date || '',
             tmdb_id: item.tmdb_id,
             poster_path: item.poster_path,
             synopsis: item.synopsis

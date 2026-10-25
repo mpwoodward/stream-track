@@ -73,16 +73,9 @@
           <label>Streaming Service</label>
           <select v-model="form.service" required>
             <option disabled value="">Select a service</option>
-            <option value="AMC+">AMC+</option>
-            <option value="Apple TV">Apple TV</option>
-            <option value="Disney+">Disney+</option>
-            <option value="HBO Max">HBO Max</option>
-            <option value="Hulu">Hulu</option>
-            <option value="MGM+">MGM+</option>
-            <option value="Netflix">Netflix</option>
-            <option value="Paramount+">Paramount+</option>
-            <option value="Peacock">Peacock</option>
-            <option value="Prime Video">Prime Video</option>
+            <option v-for="service in STREAMING_SERVICE_OPTIONS" :key="service" :value="service">
+              {{ service }}
+            </option>
           </select>
         </div>
 
@@ -114,7 +107,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { searchMulti, getWatchProviders, checkApiKey } from '../services/tmdb';
+import { searchMulti, getWatchProviders, checkApiKey, STREAMING_SERVICE_OPTIONS, matchUsFlatrateProvider } from '../services/tmdb';
 import { addMediaItem, updateMediaItem, deleteMediaItem, mediaItems } from '../services/mediaStore';
 
 const router = useRouter();
@@ -207,32 +200,9 @@ const selectResult = async (result) => {
 
   try {
     const data = await getWatchProviders(type, result.id);
-    const usProviders = data.results?.US;
-    
-    if (usProviders && usProviders.flatrate) {
-      const supportedServices = [
-        'AMC+', 'Apple TV', 'Disney+', 'HBO Max', 'Hulu', 'MGM+', 'Netflix', 
-        'Paramount+', 'Peacock', 'Prime Video'
-      ];
-      
-      const match = usProviders.flatrate.find(p => {
-        return supportedServices.some(s => 
-          p.provider_name.includes(s) || 
-          s.includes(p.provider_name) ||
-          p.provider_name.includes(s.replace('+', ' Plus'))
-        );
-      });
-
-      if (match) {
-        const exactMatch = supportedServices.find(s => 
-          match.provider_name.includes(s) || 
-          s.includes(match.provider_name) ||
-          match.provider_name.includes(s.replace('+', ' Plus'))
-        );
-        if (exactMatch) {
-          form.value.service = exactMatch;
-        }
-      }
+    const matchedService = matchUsFlatrateProvider(data, { fallbackWhenEmpty: '' });
+    if (matchedService) {
+      form.value.service = matchedService;
     }
   } catch (e) {
     console.error('Failed to fetch providers', e);
