@@ -63,10 +63,15 @@
 
         <div class="form-group">
           <label>Type</label>
-          <select v-model="form.type">
+          <select v-model="form.type" @change="handleTypeChange">
             <option value="movie">Movie</option>
             <option value="tv">TV Show</option>
           </select>
+        </div>
+
+        <div v-if="form.type === 'tv'" class="form-group">
+          <label>Season</label>
+          <input type="number" min="1" step="1" v-model.number="form.season" placeholder="e.g. 1">
         </div>
 
         <div class="form-group">
@@ -109,6 +114,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { searchMulti, getWatchProviders, checkApiKey, STREAMING_SERVICE_OPTIONS, matchUsFlatrateProvider } from '../services/tmdb';
 import { addMediaItem, updateMediaItem, deleteMediaItem, mediaItems } from '../services/mediaStore';
+import { normalizeSeason, getDefaultSeasonForType } from '../utils/seasonMedia';
 
 const router = useRouter();
 const route = useRoute();
@@ -124,6 +130,7 @@ const form = ref({
   name: '',
   nickname: '',
   type: 'movie',
+  season: null,
   service: '',
   status: 'want_to_watch',
   synopsis: '',
@@ -131,6 +138,10 @@ const form = ref({
   tmdb_id: null,
   poster_path: ''
 });
+
+const handleTypeChange = () => {
+  form.value.season = getDefaultSeasonForType(form.value.type, form.value.season);
+};
 
 const isEditing = computed(() => !!route.params.id);
 const hasApiKey = ref(false);
@@ -152,7 +163,7 @@ onMounted(async () => {
   if (isEditing.value) {
     const item = mediaItems.value.find(i => i.id === route.params.id);
     if (item) {
-      form.value = { ...item };
+      form.value = { ...item, season: item.season ?? null };
     } else {
       router.push('/');
     }
@@ -188,6 +199,7 @@ const selectResult = async (result) => {
     name: result.title || result.name,
     nickname: '',
     type: type,
+    season: getDefaultSeasonForType(type),
     service: '',
     status: 'want_to_watch',
     synopsis: result.overview,
@@ -211,12 +223,16 @@ const selectResult = async (result) => {
 
 const saveItem = async () => {
   try {
-    let status = form.value.status;
+    const payload = {
+      ...form.value,
+      season: normalizeSeason(form.value.type, form.value.season)
+    };
+    let status = payload.status;
     if (isEditing.value) {
-      await updateMediaItem(form.value);
+      await updateMediaItem(payload);
     } else {
       // Remove ID so addMediaItem generates a new one
-      const { id, ...newItem } = form.value;
+      const { id, ...newItem } = payload;
       await addMediaItem(newItem);
       status = newItem.status;
     }

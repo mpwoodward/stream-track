@@ -35,7 +35,7 @@
     </div>
 
     <div class="content">
-      <h3 class="title">{{ item.name }}</h3>
+      <h3 class="title">{{ displayTitle }}</h3>
       <p v-if="item.nickname" class="nickname">"{{ item.nickname }}"</p>
       <p class="service">{{ item.service }}</p>
       <p v-if="item.streamingService" class="streaming-service">{{ item.streamingService }}</p>
@@ -171,6 +171,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { formatMediaTitle } from '../utils/seasonMedia';
 
 const props = defineProps({
   item: {
@@ -184,6 +185,8 @@ const props = defineProps({
 });
 
 defineEmits(['move-status', 'add-to-watchlist', 'update-rating', 'not-interested']);
+
+const displayTitle = computed(() => formatMediaTitle(props.item));
 
 const showStartWatching = computed(() => props.item.status === 'want_to_watch' || props.currentTab === 'want_to_watch');
 const showFinished = computed(() => props.item.status === 'watching' || props.currentTab === 'watching');

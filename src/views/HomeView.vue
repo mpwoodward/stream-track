@@ -59,6 +59,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { mediaItems, ignoredItems, updateMediaItem, addMediaItem, addIgnoredItem, subscribeToMediaItems, unsubscribeFromMediaItems, subscribeToIgnoredItems } from '../services/mediaStore';
 import { getRecommendations, getWatchProviders, matchUsFlatrateProvider } from '../services/tmdb';
 import { matchesFilterQuery } from '../utils/filterMedia';
+import { deduplicateHistorySeeds, getDefaultSeasonForType } from '../utils/seasonMedia';
 import ShowCard from '../components/ShowCard.vue';
 
 const router = useRouter();
@@ -132,7 +133,7 @@ const fetchRecommendations = async (isLoadMore = false) => {
   }
   
   // Randomly select 6 distinct items from history to keep recommendations fresh & avoid running dry
-  const history = mediaItems.value.filter(item => item.tmdb_id && (item.status === 'watched' || item.status === 'watching'));
+  const history = deduplicateHistorySeeds(mediaItems.value);
   const sourceItems = history.sort(() => 0.5 - Math.random()).slice(0, 6);
 
   if (sourceItems.length === 0) {
@@ -219,6 +220,7 @@ const addToWatchlist = async (item) => {
         await addMediaItem({
             name: item.name,
             type: item.type,
+            season: getDefaultSeasonForType(item.type),
             service: item.streamingService || 'Unknown',
             synopsis: item.synopsis,
             release_date: item.release_date || '',
@@ -251,6 +253,7 @@ const moveStatus = async (item, newStatus) => {
         await addMediaItem({
             name: item.name,
             type: item.type,
+            season: getDefaultSeasonForType(item.type),
             service: item.streamingService || 'Unknown',
             status: 'watched', // Directly to watched
             release_date: item.release_date || '',
