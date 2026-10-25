@@ -44,8 +44,12 @@ The system SHALL register a Progressive Web App service worker that checks for u
 - **THEN** clicking "Reload" activates the new service worker and reloads the app, while clicking "Close" dismisses the toast
 
 ### Requirement: Persistent header navigation to Settings
-The system SHALL display a persistent navigation control in the global application header for authorized users that navigates to the `/settings` view.
+The system SHALL display persistent, compact icon controls with accessible labels (`aria-label`) for Settings and Logout in the global application header for authorized users so that all header elements fit within mobile and desktop viewports without overflowing the header bar.
 
 #### Scenario: Navigating to Settings from the application header
-- **WHEN** an authorized user clicks the Settings control in the top navigation bar
+- **WHEN** an authorized user clicks the Settings icon control in the top navigation bar
 - **THEN** the system navigates to `/settings` so the user can view or update configuration at any time
+
+#### Scenario: Header action controls fit within mobile viewports
+- **WHEN** an authorized user views the application on a mobile viewport
+- **THEN** the brand link, Settings icon control, and Logout icon control remain fully contained within the header bar with accessible labels for each action

@@ -89,8 +89,19 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
           <span class="app-title">StreamTrack</span>
         </RouterLink>
         <div class="header-actions">
-          <RouterLink to="/settings" class="settings-link">Settings</RouterLink>
-          <button @click="handleLogout" class="logout-btn">LOGOUT</button>
+          <RouterLink to="/settings" class="settings-link" aria-label="Settings" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </RouterLink>
+          <button @click="handleLogout" class="logout-btn" aria-label="Logout" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
       </nav>
     </header>
@@ -128,7 +139,7 @@ watch([authLoading, user, isAllowed], ([loading, currentUser, allowed]) => {
 <style scoped>
 header {
   line-height: 1.5;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1rem;
   background-color: white;
   border-bottom: 1px solid #e9ecef;
   position: sticky;
@@ -141,8 +152,7 @@ nav {
   width: 100%;
   display: flex;
   justify-content: space-between; /* Push items to edges */
-  gap: 1.5rem; /* Fallback */
-  justify-content: space-between;
+  gap: 0.75rem; /* Fallback */
   align-items: center;
 }
 
@@ -156,17 +166,20 @@ nav {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .settings-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   color: #475569;
   border: 1px solid #cbd5e1;
-  padding: 0.5rem 0.85rem;
   border-radius: 6px;
   text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9rem;
   transition: all 0.2s;
 }
 
@@ -191,13 +204,17 @@ nav {
 }
 
 .logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   background-color: transparent;
   color: #dc2626;
   border: 1px solid #dc2626;
-  padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
   transition: all 0.2s;
 }
 
